@@ -1,0 +1,6 @@
+{
+  "name": "AdharaFinx",
+  "description": "Premium Management, Simplified. Fintech SaaS platform for monthly insurance premium management across individual policyholders, insurance agents, and platform administrators.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
