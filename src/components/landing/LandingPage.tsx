@@ -252,21 +252,46 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenSampleOnboarding
               centralized settlement workflows in one structured fintech ledger.
             </p>
 
-            <div className="mt-8 flex flex-wrap items-center gap-4">
+            <div className="mt-8 flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={() => scrollToPortalAccess('individual')}
-                className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-teal-700 whitespace-nowrap shrink-0"
+                className="inline-flex min-h-[48px] w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-teal-700 whitespace-nowrap shrink-0"
               >
                 Access Role Portals
                 <ArrowRight className="h-4 w-4" />
               </button>
               <a
                 href="#calculator"
-                className="rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50 whitespace-nowrap shrink-0"
+                className="inline-flex min-h-[48px] w-full sm:w-auto items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50 whitespace-nowrap shrink-0"
               >
                 Calculate Monthly Contribution
               </a>
+            </div>
+
+            {/* Mobile GPay-style 3-Role Instant Demo Switcher */}
+            <div className="mt-5 grid grid-cols-3 gap-2 md:hidden">
+              <button
+                type="button"
+                onClick={() => login('customer.aarav@adharafinx.demo', 'User@123', 'individual')}
+                className="min-h-[44px] rounded-xl border border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-semibold text-[#0A2540] active:scale-[0.98]"
+              >
+                Policyholder Demo
+              </button>
+              <button
+                type="button"
+                onClick={() => login('agent.iyer@adharafinx.demo', 'Agent@123', 'agent')}
+                className="min-h-[44px] rounded-xl border border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-semibold text-teal-800 active:scale-[0.98]"
+              >
+                Agent Demo
+              </button>
+              <button
+                type="button"
+                onClick={() => login('admin@adharafinx.demo', 'Admin@123', 'admin')}
+                className="min-h-[44px] rounded-xl border border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-semibold text-amber-800 active:scale-[0.98]"
+              >
+                Admin Demo
+              </button>
             </div>
 
             <p className="mt-6 text-xs leading-relaxed text-slate-500">
@@ -534,7 +559,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenSampleOnboarding
                         key={role}
                         type="button"
                         onClick={() => handleRoleTabChange(role)}
-                        className={`rounded-lg border px-3 py-2.5 text-xs font-semibold capitalize transition-colors ${
+                        className={`min-h-[44px] rounded-xl border px-2 py-2.5 text-xs font-semibold capitalize transition-colors ${
                           selectedRole === role
                             ? 'border-[#0A2540] bg-[#0A2540] text-white'
                             : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
@@ -543,8 +568,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenSampleOnboarding
                         {role === 'individual'
                           ? 'Individual'
                           : role === 'agent'
-                            ? 'Insurance Agent'
-                            : 'Platform Admin'}
+                            ? 'Agent'
+                            : 'Admin'}
                       </button>
                     ))}
                   </div>
@@ -560,7 +585,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenSampleOnboarding
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
+                    className="mt-1.5 min-h-[46px] w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                   />
                 </div>
 
@@ -574,13 +599,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenSampleOnboarding
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="mt-1.5 w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
+                    className="mt-1.5 min-h-[46px] w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#0A2540] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#13365a]"
+                  className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#0A2540] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#13365a] active:scale-[0.99]"
                 >
                   <Lock className="h-4 w-4 text-teal-400" />
                   Sign In to {selectedRole === 'individual' ? 'Individual' : selectedRole === 'agent' ? 'Agent' : 'Admin'} Portal
@@ -830,7 +855,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenSampleOnboarding
                               setPassword(cred.password);
                               login(cred.email, cred.password, role);
                             }}
-                            className="rounded-md bg-[#0A2540] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#13365a] whitespace-nowrap shrink-0"
+                            className="min-h-[40px] rounded-xl bg-[#0A2540] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#13365a] whitespace-nowrap shrink-0"
                           >
                             Enter
                           </button>

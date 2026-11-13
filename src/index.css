@@ -28,6 +28,10 @@
   font-variant-numeric: tabular-nums;
 }
 
+.pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
 @media print {
   .no-print {
     display: none !important;

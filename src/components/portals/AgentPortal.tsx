@@ -1,13 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import {
   Check,
+  ChevronRight,
   Copy,
   CreditCard,
   ExternalLink,
+  Home,
   LayoutDashboard,
   LayoutGrid,
   Link2,
   LogOut,
+  MoreHorizontal,
   Search,
   Table as TableIcon,
   UserPlus,
@@ -23,6 +26,7 @@ import {
   formatINR,
 } from '../../utils/finance';
 import { BrandMark } from '../common/BrandMark';
+import { MobileSheet } from '../common/MobileSheet';
 import { PaymentCalendar } from '../common/PaymentCalendar';
 
 interface AgentPortalProps {
@@ -48,6 +52,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [inspectedCustomer, setInspectedCustomer] = useState<PolicyRecord | null>(null);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // New Customer Onboarding Link Form State
   const [customerName, setCustomerName] = useState('');
@@ -167,15 +172,15 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
-      {/* Sidebar */}
-      <aside className="w-full lg:w-64 shrink-0 border-b lg:border-b-0 lg:border-r border-slate-200 bg-white flex flex-col justify-between">
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex w-64 shrink-0 border-r border-slate-200 bg-white flex-col justify-between">
         <div>
           <div className="border-b border-slate-200 px-5 py-4">
             <BrandMark variant="wordmark" />
             <p className="mt-1 text-[11px] font-medium text-teal-700">Insurance Agent Portal</p>
           </div>
 
-          <nav className="p-3 flex lg:flex-col gap-1 overflow-x-auto">
+          <nav className="p-3 flex flex-col gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -201,7 +206,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
           </nav>
         </div>
 
-        <div className="hidden lg:block border-t border-slate-200 p-4">
+        <div className="border-t border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-900 truncate">
             {currentAgentProfile.fullName}
           </p>
@@ -222,7 +227,34 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
 
       {/* Workspace */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="border-b border-slate-200 bg-white px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+        {/* Compact Mobile Top Bar */}
+        <header className="lg:hidden sticky top-0 z-30 h-12 border-b border-slate-200 bg-white/95 backdrop-blur-md px-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-700 text-xs font-bold text-white">
+              {currentAgentProfile.fullName.charAt(0)}
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-[#0A2540] truncate">
+                {navItems.find((n) => n.id === activeTab)?.label}
+              </p>
+              <p className="text-[10px] text-slate-500 truncate">
+                {currentAgentProfile.agencyName}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open agency account menu"
+            className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+        </header>
+
+        {/* Desktop Header */}
+        <header className="hidden lg:flex border-b border-slate-200 bg-white px-6 py-3.5 items-center justify-between gap-4">
           <p className="text-xs text-slate-500">
             {currentAgentProfile.agencyName} /{' '}
             <span className="font-semibold text-[#0A2540]">
@@ -251,21 +283,98 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
               <UserPlus className="h-3.5 w-3.5" />
               New Customer Link
             </button>
-            <button
-              type="button"
-              onClick={logout}
-              className="lg:hidden rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700"
-            >
-              Sign Out
-            </button>
           </div>
         </header>
 
-        <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+        <main className="flex-1 p-4 pb-20 lg:p-6 lg:pb-6 max-w-7xl w-full mx-auto space-y-5">
           {/* OVERVIEW */}
           {activeTab === 'overview' && (
             <>
-              <div className="rounded-xl border border-slate-200 bg-white p-6 flex flex-wrap items-center justify-between gap-4">
+              {/* Mobile Razorpay-style Agency Hero Card */}
+              <div className="lg:hidden rounded-2xl bg-gradient-to-br from-[#0A2540] via-[#0F3154] to-[#0D9488] p-5 text-white">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-medium text-teal-200">
+                      {currentAgentProfile.location}
+                    </p>
+                    <h1 className="mt-0.5 font-display text-lg font-bold">
+                      {currentAgentProfile.agencyName}
+                    </h1>
+                  </div>
+                  <span className="rounded-lg bg-white/15 px-2.5 py-1 text-[11px] font-semibold">
+                    {currentAgentProfile.subscriptionStatus}
+                  </span>
+                </div>
+
+                <div className="mt-4">
+                  <p className="text-[11px] text-slate-300">Annual Premiums Managed</p>
+                  <p className="mt-0.5 font-mono text-3xl font-bold tabular-nums">
+                    {formatINR(metrics.totalAnnualValue, false)}
+                  </p>
+                  <p className="mt-1 text-xs text-teal-200 font-mono tabular-nums">
+                    Monthly Flow: {formatINR(metrics.monthlyContributionVolume)} ·{' '}
+                    {metrics.totalEnrolled} clients
+                  </p>
+                </div>
+              </div>
+
+              {/* Mobile 4-Column Quick Actions */}
+              <div className="grid grid-cols-4 gap-2 lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('onboarding')}
+                  className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white py-3 px-1 active:scale-[0.97]"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-teal-50 text-teal-700">
+                    <UserPlus className="h-5 w-5" />
+                  </span>
+                  <span className="text-[11px] font-semibold text-slate-800 whitespace-nowrap">
+                    New Link
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('customers')}
+                  className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white py-3 px-1 active:scale-[0.97]"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-[#0A2540]">
+                    <Users className="h-5 w-5" />
+                  </span>
+                  <span className="text-[11px] font-semibold text-slate-800 whitespace-nowrap">
+                    Clients
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStatusFilter('Action Required');
+                    setActiveTab('customers');
+                  }}
+                  className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white py-3 px-1 active:scale-[0.97]"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-700">
+                    <CreditCard className="h-5 w-5" />
+                  </span>
+                  <span className="text-[11px] font-semibold text-slate-800 whitespace-nowrap">
+                    Failed ({metrics.failedPayments})
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('subscription')}
+                  className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white py-3 px-1 active:scale-[0.97]"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-50 text-amber-700">
+                    <Link2 className="h-5 w-5" />
+                  </span>
+                  <span className="text-[11px] font-semibold text-slate-800 whitespace-nowrap">
+                    ₹699 Plan
+                  </span>
+                </button>
+              </div>
+
+              {/* Desktop Welcome Header */}
+              <div className="hidden lg:flex rounded-xl border border-slate-200 bg-white p-6 items-center justify-between gap-4">
                 <div>
                   <p className="text-xs text-slate-500">
                     {currentAgentProfile.location} · Licence {currentAgentProfile.licenseNumber}
@@ -288,50 +397,50 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
               </div>
 
               {/* 8 Agent KPIs */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs text-slate-500">Total Enrolled Customers</p>
-                  <p className="mt-1 font-mono text-2xl font-bold text-[#0A2540] tabular-nums">
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+                <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs text-slate-500">Enrolled Customers</p>
+                  <p className="mt-1 font-mono text-xl lg:text-2xl font-bold text-[#0A2540] tabular-nums">
                     {metrics.totalEnrolled}
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs text-slate-500">Active Customers</p>
-                  <p className="mt-1 font-mono text-2xl font-bold text-emerald-700 tabular-nums">
+                  <p className="mt-1 font-mono text-xl lg:text-2xl font-bold text-emerald-700 tabular-nums">
                     {metrics.activeCustomers}
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs text-slate-500">Pending Onboarding</p>
-                  <p className="mt-1 font-mono text-2xl font-bold text-amber-700 tabular-nums">
+                  <p className="mt-1 font-mono text-xl lg:text-2xl font-bold text-amber-700 tabular-nums">
                     {metrics.pendingOnboarding}
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs text-slate-500">Active Mandates</p>
-                  <p className="mt-1 font-mono text-2xl font-bold text-teal-700 tabular-nums">
+                  <p className="mt-1 font-mono text-xl lg:text-2xl font-bold text-teal-700 tabular-nums">
                     {metrics.activeMandates}
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs text-slate-500">Failed Payments (Count)</p>
-                  <p className="mt-1 font-mono text-2xl font-bold text-red-700 tabular-nums">
+                <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs text-slate-500">Failed Payments</p>
+                  <p className="mt-1 font-mono text-xl lg:text-2xl font-bold text-red-700 tabular-nums">
                     {metrics.failedPayments}
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs text-slate-500">Upcoming Renewals / Settlements</p>
-                  <p className="mt-1 font-mono text-2xl font-bold text-[#0A2540] tabular-nums">
+                <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs text-slate-500">Upcoming Renewals</p>
+                  <p className="mt-1 font-mono text-xl lg:text-2xl font-bold text-[#0A2540] tabular-nums">
                     {metrics.upcomingRenewals}
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="hidden lg:block rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs text-slate-500">Total Annual Premium Managed</p>
                   <p className="mt-1 font-mono text-2xl font-bold text-[#0A2540] tabular-nums">
                     {formatINR(metrics.totalAnnualValue, false)}
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="hidden lg:block rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs text-slate-500">Monthly Contribution Volume</p>
                   <p className="mt-1 font-mono text-2xl font-bold text-teal-700 tabular-nums">
                     {formatINR(metrics.monthlyContributionVolume)}
@@ -339,12 +448,45 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                 </div>
               </div>
 
-              {/* Actionable Book Summary */}
-              <div className="rounded-xl border border-slate-200 bg-white p-6">
+              {/* Assigned Customers Tap List (Mobile) + Table (Desktop) */}
+              <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-5 md:p-6">
                 <h2 className="font-display text-base font-bold text-[#0A2540]">
                   Assigned Customers Requiring Attention
                 </h2>
-                <div className="mt-4 overflow-x-auto">
+
+                <div className="mt-3 divide-y divide-slate-100 md:hidden">
+                  {assignedPolicies.map((pol) => (
+                    <button
+                      key={pol.id}
+                      type="button"
+                      onClick={() => {
+                        setInspectedCustomer(pol);
+                        setActiveTab('customers');
+                      }}
+                      className="w-full min-h-[60px] py-3 flex items-center justify-between gap-3 text-left"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-[#0A2540] truncate">
+                          {pol.customerName}
+                        </p>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {pol.policyNumber} ·{' '}
+                          {pol.consecutiveMissedMonths > 0
+                            ? `${pol.consecutiveMissedMonths} Missed`
+                            : pol.onboardingStatus}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="font-mono text-xs font-semibold text-slate-900 tabular-nums">
+                          {formatINR(pol.annualPremium, false)}
+                        </span>
+                        <ChevronRight className="h-4 w-4 text-slate-400" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="hidden md:block mt-4 overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
                       <tr className="border-b border-slate-200 text-slate-500">
@@ -404,50 +546,48 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
             </>
           )}
 
-          {/* CUSTOMERS TAB (Table + Card Switcher + Customer Detail Inspector) */}
+          {/* CUSTOMERS TAB */}
           {activeTab === 'customers' && (
             <>
               {inspectedCustomer ? (
-                <div className="space-y-6">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => setInspectedCustomer(null)}
-                        className="text-xs font-semibold text-teal-700 hover:underline"
-                      >
-                        ← Back to Assigned Customer Book
-                      </button>
-                      <h2 className="mt-1 font-display text-2xl font-bold text-[#0A2540]">
-                        {inspectedCustomer.customerName} · {inspectedCustomer.policyNumber}
-                      </h2>
-                      <p className="text-xs text-slate-500">
-                        {inspectedCustomer.insuranceCompany} · {inspectedCustomer.policyName} (
-                        {inspectedCustomer.category})
-                      </p>
-                    </div>
+                <div className="space-y-5">
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setInspectedCustomer(null)}
+                      className="min-h-[40px] text-xs font-semibold text-teal-700 hover:underline"
+                    >
+                      ← Back to Assigned Customer Book
+                    </button>
+                    <h2 className="mt-1 font-display text-2xl font-bold text-[#0A2540]">
+                      {inspectedCustomer.customerName} · {inspectedCustomer.policyNumber}
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      {inspectedCustomer.insuranceCompany} · {inspectedCustomer.policyName} (
+                      {inspectedCustomer.category})
+                    </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-4">
                       <p className="text-xs text-slate-500">Annual Premium</p>
                       <p className="mt-1 font-mono text-lg font-bold text-[#0A2540] tabular-nums">
                         {formatINR(inspectedCustomer.annualPremium, false)}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-4">
                       <p className="text-xs text-slate-500">Accumulated Base</p>
                       <p className="mt-1 font-mono text-lg font-bold text-emerald-700 tabular-nums">
                         {formatINR(inspectedCustomer.accumulatedBaseContribution, false)}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-4">
                       <p className="text-xs text-slate-500">Mandate Status</p>
                       <p className="mt-1 font-display text-base font-bold text-[#0A2540]">
                         {inspectedCustomer.mandateStatus}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-4">
                       <p className="text-xs text-slate-500">Paid / Pending / Missed</p>
                       <p className="mt-1 font-mono text-base font-bold text-slate-900 tabular-nums">
                         {inspectedCustomer.paidMonths} / {inspectedCustomer.pendingMonths} /{' '}
@@ -464,22 +604,22 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 flex flex-wrap items-center justify-between gap-4">
+                  <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-4 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-3 flex-1">
-                      <div className="relative flex-1 min-w-[220px] max-w-sm">
+                      <div className="relative flex-1 min-w-[200px]">
                         <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                           type="text"
-                          placeholder="Search customer, policy number, insurer..."
+                          placeholder="Search customer, policy, insurer..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full rounded-lg border border-slate-300 pl-9 pr-3 py-2 text-xs focus:border-teal-600 focus:outline-none"
+                          className="min-h-[44px] w-full rounded-xl border border-slate-300 pl-9 pr-3 py-2 text-xs focus:border-teal-600 focus:outline-none"
                         />
                       </div>
                       <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700"
+                        className="min-h-[44px] rounded-xl border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700"
                       >
                         <option value="ALL">All Statuses</option>
                         <option value="Active">Active</option>
@@ -490,7 +630,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                       </select>
                     </div>
 
-                    <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1">
+                    <div className="hidden md:flex items-center gap-1 rounded-lg bg-slate-100 p-1">
                       <button
                         type="button"
                         onClick={() => setViewMode('table')}
@@ -518,7 +658,8 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                     </div>
                   </div>
 
-                  {viewMode === 'table' ? (
+                  {/* Mobile always shows crisp Cards; Desktop switches between Table & Cards */}
+                  <div className={viewMode === 'table' ? 'hidden md:block' : 'hidden'}>
                     <div className="rounded-xl border border-slate-200 bg-white overflow-x-auto">
                       <table className="w-full text-left text-xs">
                         <thead>
@@ -589,85 +730,89 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                         </tbody>
                       </table>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {filteredCustomers.map((pol) => {
-                        const c = calculateContribution(pol.annualPremium);
-                        return (
-                          <div
-                            key={pol.id}
-                            className="rounded-xl border border-slate-200 bg-white p-5 flex flex-col justify-between"
-                          >
-                            <div>
-                              <div className="flex items-start justify-between gap-2">
-                                <div>
-                                  <h3 className="font-display text-base font-bold text-[#0A2540]">
-                                    {pol.customerName}
-                                  </h3>
-                                  <p className="font-mono text-xs text-slate-500">
-                                    {pol.policyNumber}
-                                  </p>
-                                </div>
-                                <span className="text-xs font-semibold text-teal-700">
-                                  {pol.mandateStatus}
-                                </span>
-                              </div>
-                              <p className="mt-2 text-xs text-slate-700">
-                                {pol.insuranceCompany} · {pol.policyName}
-                              </p>
+                  </div>
 
-                              <div className="mt-4 grid grid-cols-2 gap-2.5 border-t border-slate-100 pt-3 text-xs">
-                                <div>
-                                  <span className="text-slate-500">Annual</span>
-                                  <p className="font-mono font-semibold text-slate-900 tabular-nums">
-                                    {formatINR(pol.annualPremium, false)}
-                                  </p>
-                                </div>
-                                <div>
-                                  <span className="text-slate-500">Monthly</span>
-                                  <p className="font-mono font-semibold text-teal-700 tabular-nums">
-                                    {formatINR(c.totalMonthly)}
-                                  </p>
-                                </div>
-                                <div>
-                                  <span className="text-slate-500">Accumulated</span>
-                                  <p className="font-mono font-semibold text-emerald-700 tabular-nums">
-                                    {formatINR(pol.accumulatedBaseContribution, false)}
-                                  </p>
-                                </div>
-                                <div>
-                                  <span className="text-slate-500">Paid / Pending</span>
-                                  <p className="font-mono font-semibold text-slate-900 tabular-nums">
-                                    {pol.paidMonths} / {pol.pendingMonths}
-                                  </p>
-                                </div>
-                                <div>
-                                  <span className="text-slate-500">Next Debit</span>
-                                  <p className="font-mono text-slate-800">
-                                    {formatDate(pol.nextDebitDate)}
-                                  </p>
-                                </div>
-                                <div>
-                                  <span className="text-slate-500">Renewal Date</span>
-                                  <p className="font-mono text-slate-800">
-                                    {formatDate(pol.annualDueDate)}
-                                  </p>
-                                </div>
+                  <div
+                    className={`grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 ${
+                      viewMode === 'table' ? 'md:hidden' : ''
+                    }`}
+                  >
+                    {filteredCustomers.map((pol) => {
+                      const c = calculateContribution(pol.annualPremium);
+                      return (
+                        <div
+                          key={pol.id}
+                          className="rounded-2xl border border-slate-200 bg-white p-5 flex flex-col justify-between"
+                        >
+                          <div>
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <h3 className="font-display text-base font-bold text-[#0A2540]">
+                                  {pol.customerName}
+                                </h3>
+                                <p className="font-mono text-xs text-slate-500">
+                                  {pol.policyNumber}
+                                </p>
+                              </div>
+                              <span className="text-xs font-semibold text-teal-700">
+                                {pol.mandateStatus}
+                              </span>
+                            </div>
+                            <p className="mt-2 text-xs text-slate-700">
+                              {pol.insuranceCompany} · {pol.policyName}
+                            </p>
+
+                            <div className="mt-4 grid grid-cols-2 gap-2.5 border-t border-slate-100 pt-3 text-xs">
+                              <div>
+                                <span className="text-slate-500">Annual</span>
+                                <p className="font-mono font-semibold text-slate-900 tabular-nums">
+                                  {formatINR(pol.annualPremium, false)}
+                                </p>
+                              </div>
+                              <div>
+                                <span className="text-slate-500">Monthly</span>
+                                <p className="font-mono font-semibold text-teal-700 tabular-nums">
+                                  {formatINR(c.totalMonthly)}
+                                </p>
+                              </div>
+                              <div>
+                                <span className="text-slate-500">Accumulated</span>
+                                <p className="font-mono font-semibold text-emerald-700 tabular-nums">
+                                  {formatINR(pol.accumulatedBaseContribution, false)}
+                                </p>
+                              </div>
+                              <div>
+                                <span className="text-slate-500">Paid / Pending</span>
+                                <p className="font-mono font-semibold text-slate-900 tabular-nums">
+                                  {pol.paidMonths} / {pol.pendingMonths}
+                                </p>
+                              </div>
+                              <div>
+                                <span className="text-slate-500">Next Debit</span>
+                                <p className="font-mono text-slate-800">
+                                  {formatDate(pol.nextDebitDate)}
+                                </p>
+                              </div>
+                              <div>
+                                <span className="text-slate-500">Renewal Date</span>
+                                <p className="font-mono text-slate-800">
+                                  {formatDate(pol.annualDueDate)}
+                                </p>
                               </div>
                             </div>
-
-                            <button
-                              type="button"
-                              onClick={() => setInspectedCustomer(pol)}
-                              className="mt-4 w-full rounded-lg border border-[#0A2540] py-2 text-xs font-semibold text-[#0A2540] hover:bg-[#0A2540] hover:text-white transition-colors"
-                            >
-                              Open Customer Dashboard
-                            </button>
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
+
+                          <button
+                            type="button"
+                            onClick={() => setInspectedCustomer(pol)}
+                            className="mt-4 min-h-[44px] w-full rounded-xl border border-[#0A2540] py-2 text-xs font-semibold text-[#0A2540] hover:bg-[#0A2540] hover:text-white transition-colors"
+                          >
+                            Open Customer Dashboard
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </>
@@ -678,7 +823,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
               <form
                 onSubmit={handleCreateOnboarding}
-                className="lg:col-span-7 rounded-xl border border-slate-200 bg-white p-6 space-y-4"
+                className="lg:col-span-7 rounded-2xl border border-slate-200 bg-white p-5 md:p-6 space-y-4"
               >
                 <div>
                   <h2 className="font-display text-lg font-bold text-[#0A2540]">
@@ -691,7 +836,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                 </div>
 
                 {generatedInvite && (
-                  <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-xs space-y-2">
+                  <div className="rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-xs space-y-2">
                     <p className="font-bold text-emerald-900">
                       Unique Onboarding Link Generated for {generatedInvite.customerName}
                     </p>
@@ -703,7 +848,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                       <button
                         type="button"
                         onClick={() => handleCopyToken(generatedInvite.token)}
-                        className="inline-flex items-center gap-1.5 rounded-md bg-white border border-emerald-300 px-3 py-1.5 font-semibold text-emerald-900"
+                        className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl bg-white border border-emerald-300 px-3 py-1.5 font-semibold text-emerald-900"
                       >
                         <Copy className="h-3.5 w-3.5" />
                         {copiedToken === generatedInvite.token ? 'Copied Link' : 'Copy Link'}
@@ -711,10 +856,10 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                       <button
                         type="button"
                         onClick={() => onOpenOnboardingLink(generatedInvite.token)}
-                        className="inline-flex items-center gap-1.5 rounded-md bg-[#0A2540] px-3 py-1.5 font-semibold text-white"
+                        className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl bg-[#0A2540] px-3 py-1.5 font-semibold text-white"
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
-                        Open Customer Onboarding Flow (Preview)
+                        Open Customer Flow
                       </button>
                     </div>
                   </div>
@@ -729,7 +874,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                       placeholder="e.g., Deepak Verma"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                     />
                   </div>
                   <div>
@@ -740,7 +885,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                       placeholder="deepak@example.com"
                       value={customerEmail}
                       onChange={(e) => setCustomerEmail(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                     />
                   </div>
                   <div>
@@ -751,7 +896,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                       placeholder="+91 98100 22334"
                       value={customerMobile}
                       onChange={(e) => setCustomerMobile(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                     />
                   </div>
                   <div>
@@ -759,7 +904,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value as PolicyCategory)}
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                     >
                       <option value="Health">Health</option>
                       <option value="Life">Life</option>
@@ -777,7 +922,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                       required
                       value={insuranceCompany}
                       onChange={(e) => setInsuranceCompany(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                     />
                   </div>
                   <div>
@@ -787,7 +932,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                       required
                       value={policyName}
                       onChange={(e) => setPolicyName(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                     />
                   </div>
                   <div>
@@ -797,7 +942,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                       placeholder="Auto-generated if blank"
                       value={policyNumber}
                       onChange={(e) => setPolicyNumber(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm"
+                      className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 font-mono text-sm"
                     />
                   </div>
                   <div>
@@ -810,7 +955,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                       min={1200}
                       value={annualPremium}
                       onChange={(e) => setAnnualPremium(Math.max(1200, Number(e.target.value)))}
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm"
+                      className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 font-mono text-sm"
                     />
                   </div>
                   <div>
@@ -820,7 +965,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                       required
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                     />
                   </div>
                   <div>
@@ -830,7 +975,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                       required
                       value={annualDueDate}
                       onChange={(e) => setAnnualDueDate(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                     />
                   </div>
                   <div className="sm:col-span-2">
@@ -841,20 +986,20 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                       type="text"
                       value={nomineeDetails}
                       onChange={(e) => setNomineeDetails(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                     />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-teal-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-teal-700"
+                  className="min-h-[48px] w-full rounded-xl bg-teal-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-teal-700"
                 >
                   Generate Unique Customer Onboarding Link
                 </button>
               </form>
 
-              <div className="lg:col-span-5 rounded-xl border border-slate-200 bg-white p-6">
+              <div className="lg:col-span-5 rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
                 <h3 className="font-display text-base font-bold text-[#0A2540]">
                   Issued Onboarding Invites
                 </h3>
@@ -868,7 +1013,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                     .map((pol) => (
                       <div
                         key={pol.id}
-                        className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs space-y-2"
+                        className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs space-y-2"
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-semibold text-slate-900">{pol.customerName}</span>
@@ -889,7 +1034,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                           <button
                             type="button"
                             onClick={() => handleCopyToken(pol.onboardingToken!)}
-                            className="inline-flex items-center gap-1 rounded border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-700"
+                            className="inline-flex min-h-[38px] items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1 font-semibold text-slate-700"
                           >
                             {copiedToken === pol.onboardingToken ? (
                               <Check className="h-3 w-3 text-emerald-600" />
@@ -901,10 +1046,10 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                           <button
                             type="button"
                             onClick={() => onOpenOnboardingLink(pol.onboardingToken!)}
-                            className="inline-flex items-center gap-1 rounded bg-[#0A2540] px-2.5 py-1 font-semibold text-white"
+                            className="inline-flex min-h-[38px] items-center gap-1 rounded-lg bg-[#0A2540] px-3 py-1 font-semibold text-white"
                           >
                             <ExternalLink className="h-3 w-3" />
-                            Simulate Customer Open
+                            Simulate Open
                           </button>
                         </div>
                       </div>
@@ -917,7 +1062,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
           {/* SUBSCRIPTION TAB */}
           {activeTab === 'subscription' && (
             <div className="space-y-6">
-              <div className="rounded-xl border border-slate-200 bg-white p-6">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
                 <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5">
                   <div>
                     <p className="text-xs font-semibold text-teal-700">
@@ -956,7 +1101,7 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                         <p className="text-xs font-semibold text-slate-500">
                           Optional SMS Reminder Package
                         </p>
-                        <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-800 cursor-pointer">
+                        <label className="inline-flex min-h-[36px] items-center gap-2 text-xs font-semibold text-slate-800 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={currentAgentProfile.smsPackageEnabled}
@@ -993,14 +1138,14 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
                   <button
                     type="button"
                     onClick={() => activateAgentSubscription(currentAgentProfile.id)}
-                    className="rounded-lg bg-[#0A2540] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#13365a]"
+                    className="min-h-[44px] w-full sm:w-auto rounded-xl bg-[#0A2540] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#13365a]"
                   >
                     Simulate Subscription Activation / Renewal (DEMO)
                   </button>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-white p-6">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
                 <h3 className="font-display text-base font-bold text-[#0A2540]">
                   Subscription Billing History (DEMO)
                 </h3>
@@ -1043,6 +1188,67 @@ export const AgentPortal: React.FC<AgentPortalProps> = ({ onOpenOnboardingLink }
           )}
         </main>
       </div>
+
+      {/* Mobile Fixed Bottom Navigation Bar */}
+      <nav
+        aria-label="Agent Mobile Navigation"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 h-15 pb-safe border-t border-slate-200 bg-white/95 backdrop-blur-md grid grid-cols-4 items-center"
+      >
+        {[
+          { id: 'overview' as const, label: 'Home', icon: Home },
+          { id: 'customers' as const, label: 'Clients', icon: Users },
+          { id: 'onboarding' as const, label: 'Invite', icon: UserPlus },
+          { id: 'subscription' as const, label: 'Plan', icon: CreditCard },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const active = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => {
+                setActiveTab(tab.id);
+                setInspectedCustomer(null);
+              }}
+              className={`flex min-h-[44px] flex-col items-center justify-center ${
+                active ? 'text-[#0A2540]' : 'text-slate-500'
+              }`}
+            >
+              <Icon className={`h-5 w-5 ${active ? 'text-teal-600' : ''}`} />
+              <span className="mt-0.5 text-[10px] font-semibold tracking-tight">{tab.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Mobile Agency Profile Sheet */}
+      <MobileSheet
+        open={mobileMenuOpen}
+        title={currentAgentProfile.fullName}
+        subtitle={`${currentAgentProfile.agencyName} · ${currentAgentProfile.licenseNumber}`}
+        onClose={() => setMobileMenuOpen(false)}
+      >
+        <div className="space-y-3 text-xs">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-1">
+            <p className="text-slate-500">Subscription Status</p>
+            <p className="font-display text-base font-bold text-[#0A2540]">
+              {currentAgentProfile.subscriptionStatus} · Renewal{' '}
+              {formatDate(currentAgentProfile.renewalDate)}
+            </p>
+            <p className="text-slate-600">
+              Representing: {currentAgentProfile.companiesRepresented.join(', ')}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={logout}
+            className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 text-sm font-semibold text-red-700"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </button>
+        </div>
+      </MobileSheet>
     </div>
   );
 };

@@ -1,13 +1,17 @@
 import React, { useMemo, useState } from 'react';
 import {
   AlertTriangle,
+  ArrowDownLeft,
   Calculator,
   Calendar as CalendarIcon,
   CheckCircle2,
+  ChevronRight,
   CreditCard,
   FileText,
+  Home,
   LayoutDashboard,
   LogOut,
+  MoreHorizontal,
   Plus,
   Receipt,
   ShieldAlert,
@@ -29,6 +33,7 @@ import {
 } from '../../utils/finance';
 import { BrandMark } from '../common/BrandMark';
 import { ContributionCalculator } from '../common/ContributionCalculator';
+import { MobileSheet } from '../common/MobileSheet';
 import { PaymentCalendar } from '../common/PaymentCalendar';
 import { ReceiptModal } from '../common/ReceiptModal';
 
@@ -70,6 +75,7 @@ export const IndividualPortal: React.FC = () => {
   const [selectedPolicyId, setSelectedPolicyId] = useState<string>(myPolicies[0]?.id ?? '');
   const [receiptTx, setReceiptTx] = useState<LedgerTransaction | null>(null);
   const [showAddPolicyForm, setShowAddPolicyForm] = useState(myPolicies.length === 0);
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
 
   // Add policy form state
   const [insuranceCompany, setInsuranceCompany] = useState('HDFC ERGO General Insurance');
@@ -111,6 +117,13 @@ export const IndividualPortal: React.FC = () => {
   const escalationStage = activePolicy
     ? getEscalationStage(activePolicy.consecutiveMissedMonths)
     : 'None';
+
+  const progressPct = activePolicy
+    ? Math.min(
+        100,
+        Math.round((activePolicy.accumulatedBaseContribution / activePolicy.annualPremium) * 100)
+      )
+    : 0;
 
   const handleCreatePolicy = (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,8 +171,8 @@ export const IndividualPortal: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
-      {/* Sidebar */}
-      <aside className="w-full lg:w-64 shrink-0 border-b lg:border-b-0 lg:border-r border-slate-200 bg-white flex flex-col justify-between">
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex w-64 shrink-0 border-r border-slate-200 bg-white flex-col justify-between">
         <div>
           <div className="border-b border-slate-200 px-5 py-4">
             <BrandMark variant="wordmark" />
@@ -168,7 +181,7 @@ export const IndividualPortal: React.FC = () => {
             </p>
           </div>
 
-          <nav className="p-3 flex lg:flex-col gap-1 overflow-x-auto">
+          <nav className="p-3 flex flex-col gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -191,7 +204,7 @@ export const IndividualPortal: React.FC = () => {
           </nav>
         </div>
 
-        <div className="hidden lg:block border-t border-slate-200 p-4">
+        <div className="border-t border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-900 truncate">{currentUser?.name}</p>
           <p className="text-[11px] text-slate-500 truncate">{currentUser?.email}</p>
           <button
@@ -207,15 +220,46 @@ export const IndividualPortal: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="border-b border-slate-200 bg-white px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-xs text-slate-500">
-              Policyholder Portal /{' '}
-              <span className="font-semibold text-[#0A2540]">
+        {/* Compact Mobile Top App Bar (GPay / Razorpay style) */}
+        <header className="lg:hidden sticky top-0 z-30 h-12 border-b border-slate-200 bg-white/95 backdrop-blur-md px-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0A2540] text-xs font-bold text-teal-400">
+              {currentUser?.name?.charAt(0) ?? 'A'}
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-[#0A2540] truncate">
                 {navItems.find((n) => n.id === activeTab)?.label}
-              </span>
-            </p>
+              </p>
+              <p className="text-[10px] text-slate-500 truncate">
+                {activePolicy ? `${activePolicy.policyNumber} · ${activePolicy.category}` : 'AdharaFinx'}
+              </p>
+            </div>
           </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                setShowAddPolicyForm(true);
+                setActiveTab('policies');
+              }}
+              aria-label="Add policy"
+              className="inline-flex min-h-[36px] items-center gap-1 rounded-full bg-teal-600 px-3 text-xs font-semibold text-white active:scale-[0.98]"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Policy
+            </button>
+          </div>
+        </header>
+
+        {/* Desktop Header */}
+        <header className="hidden lg:flex border-b border-slate-200 bg-white px-6 py-3.5 items-center justify-between gap-4">
+          <p className="text-xs text-slate-500">
+            Policyholder Portal /{' '}
+            <span className="font-semibold text-[#0A2540]">
+              {navItems.find((n) => n.id === activeTab)?.label}
+            </span>
+          </p>
 
           <div className="flex items-center gap-3">
             {myPolicies.length > 0 && (
@@ -243,20 +287,33 @@ export const IndividualPortal: React.FC = () => {
               <Plus className="h-3.5 w-3.5" />
               Add Policy
             </button>
-            <button
-              type="button"
-              onClick={logout}
-              className="lg:hidden rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700"
-            >
-              Sign Out
-            </button>
           </div>
         </header>
 
-        <main className="flex-1 p-6 max-w-6xl w-full mx-auto space-y-6">
+        <main className="flex-1 p-4 pb-20 lg:p-6 lg:pb-6 max-w-6xl w-full mx-auto space-y-5">
+          {/* Mobile Policy Switcher Strip when customer has multiple policies */}
+          {myPolicies.length > 1 && (
+            <div className="lg:hidden flex items-center gap-2 overflow-x-auto pb-1">
+              {myPolicies.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setSelectedPolicyId(p.id)}
+                  className={`min-h-[38px] rounded-xl border px-3 text-xs font-semibold whitespace-nowrap shrink-0 transition-colors ${
+                    p.id === activePolicy?.id
+                      ? 'border-[#0A2540] bg-[#0A2540] text-white'
+                      : 'border-slate-200 bg-white text-slate-700'
+                  }`}
+                >
+                  {p.category} · {p.policyNumber}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Empty State if user has no policies */}
           {!activePolicy && activeTab !== 'policies' && activeTab !== 'calculator' ? (
-            <div className="rounded-xl border border-slate-200 bg-white p-10 text-center">
+            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
               <h2 className="font-display text-xl font-bold text-[#0A2540]">
                 Register Your First Insurance Policy
               </h2>
@@ -270,7 +327,7 @@ export const IndividualPortal: React.FC = () => {
                   setShowAddPolicyForm(true);
                   setActiveTab('policies');
                 }}
-                className="mt-5 rounded-lg bg-teal-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-teal-700"
+                className="mt-5 min-h-[44px] rounded-xl bg-teal-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-teal-700"
               >
                 Add Existing Policy
               </button>
@@ -283,7 +340,7 @@ export const IndividualPortal: React.FC = () => {
               {/* Automated Missed Payment Escalation Notification */}
               {escalationStage !== 'None' && (
                 <div
-                  className={`rounded-xl border p-5 flex flex-wrap items-start justify-between gap-4 ${
+                  className={`rounded-2xl border p-4 md:p-5 flex flex-wrap items-start justify-between gap-4 ${
                     escalationStage === 'Escalation'
                       ? 'border-red-300 bg-red-50'
                       : escalationStage === 'Warning'
@@ -302,8 +359,7 @@ export const IndividualPortal: React.FC = () => {
                       }`}
                     />
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-wide text-slate-900">
-                        Automated Missed Payment Notice · Stage:{' '}
+                      <p className="text-xs font-bold text-slate-900">
                         {activePolicy.consecutiveMissedMonths === 1
                           ? '1st Consecutive Missed Payment — Reminder'
                           : activePolicy.consecutiveMissedMonths === 2
@@ -311,26 +367,143 @@ export const IndividualPortal: React.FC = () => {
                             : `${activePolicy.consecutiveMissedMonths} Consecutive Missed Payments — Escalation`}
                       </p>
                       <p className="mt-1 text-xs leading-relaxed text-slate-700">
-                        Please submit your reason or update your payment mandate. Your accumulated
-                        base contributions ({formatINR(activePolicy.accumulatedBaseContribution)})
-                        are never automatically confiscated; cancellation, refunds, and any
-                        charges are strictly subject to agreed customer terms and insurer policy
-                        conditions.
+                        Accumulated contributions ({formatINR(activePolicy.accumulatedBaseContribution)})
+                        are never automatically confiscated. Policy cancellation, refunds, and charges
+                        follow agreed terms and insurer conditions.
                       </p>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => setActiveTab('missed-reason')}
-                    className="rounded-lg bg-[#0A2540] px-4 py-2 text-xs font-semibold text-white hover:bg-[#13365a] whitespace-nowrap shrink-0"
+                    className="min-h-[44px] w-full sm:w-auto rounded-xl bg-[#0A2540] px-4 py-2 text-xs font-semibold text-white hover:bg-[#13365a] whitespace-nowrap shrink-0"
                   >
-                    Open Reason Submission Page
+                    Submit Reason
                   </button>
                 </div>
               )}
 
-              {/* Primary Policy Header */}
-              <div className="rounded-xl border border-slate-200 bg-white p-6 flex flex-wrap items-center justify-between gap-4">
+              {/* Mobile GPay / Razorpay Fintech Hero Wallet Card */}
+              <div className="rounded-2xl bg-gradient-to-br from-[#0A2540] via-[#0F3154] to-[#0D9488] p-5 text-white shadow-sm lg:hidden">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-medium text-teal-200 truncate">
+                      {activePolicy.insuranceCompany}
+                    </p>
+                    <h1 className="mt-0.5 font-display text-lg font-bold truncate">
+                      {activePolicy.policyName}
+                    </h1>
+                  </div>
+                  <span className="rounded-lg bg-white/15 px-2.5 py-1 text-[11px] font-semibold text-white whitespace-nowrap shrink-0">
+                    {activePolicy.mandateStatus}
+                  </span>
+                </div>
+
+                <div className="mt-5 flex items-end justify-between gap-4">
+                  <div>
+                    <p className="text-[11px] text-slate-300">Accumulated Towards Annual</p>
+                    <p className="mt-0.5 font-mono text-3xl font-bold tabular-nums">
+                      {formatINR(activePolicy.accumulatedBaseContribution, false)}
+                    </p>
+                    <p className="mt-1 text-xs text-teal-200 font-mono tabular-nums">
+                      Target: {formatINR(activePolicy.annualPremium, false)} · Rem:{' '}
+                      {formatINR(remainingAnnual, false)}
+                    </p>
+                  </div>
+
+                  {/* Compact SVG Progress Ring */}
+                  <div className="relative h-14 w-14 shrink-0 flex items-center justify-center">
+                    <svg className="h-14 w-14 -rotate-90" viewBox="0 0 36 36">
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="15"
+                        fill="none"
+                        stroke="rgba(255,255,255,0.2)"
+                        strokeWidth="3"
+                      />
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="15"
+                        fill="none"
+                        stroke="#5EEAD4"
+                        strokeWidth="3"
+                        strokeDasharray={`${progressPct}, 100`}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span className="absolute font-mono text-[11px] font-bold">{progressPct}%</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between border-t border-white/15 pt-3 text-xs">
+                  <span>
+                    Monthly Debit:{' '}
+                    <strong className="font-mono tabular-nums">
+                      {formatINR(calc.totalMonthly)}
+                    </strong>
+                  </span>
+                  <span className="font-mono text-teal-200">
+                    Next: {formatDate(activePolicy.nextDebitDate)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Mobile GPay / Razorpay 4-Column Quick Action Circles */}
+              <div className="grid grid-cols-4 gap-2 lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => simulatePolicyPayment(activePolicy.id, 'Paid')}
+                  className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white py-3 px-1 active:scale-[0.97] transition-transform"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-teal-50 text-teal-700">
+                    <ArrowDownLeft className="h-5 w-5" />
+                  </span>
+                  <span className="text-[11px] font-semibold text-slate-800 whitespace-nowrap">
+                    Pay Cycle
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('mandate')}
+                  className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white py-3 px-1 active:scale-[0.97] transition-transform"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-[#0A2540]">
+                    <CreditCard className="h-5 w-5" />
+                  </span>
+                  <span className="text-[11px] font-semibold text-slate-800 whitespace-nowrap">
+                    Mandate
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('calendar')}
+                  className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white py-3 px-1 active:scale-[0.97] transition-transform"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-sky-50 text-sky-700">
+                    <CalendarIcon className="h-5 w-5" />
+                  </span>
+                  <span className="text-[11px] font-semibold text-slate-800 whitespace-nowrap">
+                    Calendar
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => simulatePolicyPayment(activePolicy.id, 'Failed')}
+                  className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white py-3 px-1 active:scale-[0.97] transition-transform"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-700">
+                    <AlertTriangle className="h-5 w-5" />
+                  </span>
+                  <span className="text-[11px] font-semibold text-slate-800 whitespace-nowrap">
+                    Sim Miss
+                  </span>
+                </button>
+              </div>
+
+              {/* Desktop Primary Policy Header */}
+              <div className="hidden lg:flex rounded-xl border border-slate-200 bg-white p-6 items-center justify-between gap-4">
                 <div>
                   <p className="text-xs text-slate-500">
                     {activePolicy.insuranceCompany} · {activePolicy.category} ·{' '}
@@ -341,7 +514,6 @@ export const IndividualPortal: React.FC = () => {
                   </h1>
                 </div>
 
-                {/* Interactive Demo Payment Simulation Controls */}
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
@@ -360,104 +532,133 @@ export const IndividualPortal: React.FC = () => {
                 </div>
               </div>
 
-              {/* 10 Required Dashboard Metrics Grid */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
+              {/* Metrics Grid (2-col on mobile, 5-col on desktop) */}
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 lg:gap-4">
+                <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs text-slate-500">Annual Premium</p>
-                  <p className="mt-1 font-mono text-xl font-bold text-[#0A2540] tabular-nums">
+                  <p className="mt-1 font-mono text-lg lg:text-xl font-bold text-[#0A2540] tabular-nums">
                     {formatINR(activePolicy.annualPremium, false)}
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs text-slate-500">Monthly Contribution</p>
-                  <p className="mt-1 font-mono text-xl font-bold text-teal-700 tabular-nums">
+                  <p className="mt-1 font-mono text-lg lg:text-xl font-bold text-teal-700 tabular-nums">
                     {formatINR(calc.totalMonthly)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-slate-500">
                     Base {formatINR(calc.monthlyBase)}
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="hidden lg:block rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs text-slate-500">Total Accumulated</p>
                   <p className="mt-1 font-mono text-xl font-bold text-emerald-700 tabular-nums">
                     {formatINR(activePolicy.accumulatedBaseContribution, false)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-slate-500">Base principal saved</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs text-slate-500">Remaining Towards Annual</p>
-                  <p className="mt-1 font-mono text-xl font-bold text-slate-900 tabular-nums">
+                <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs text-slate-500">Remaining Target</p>
+                  <p className="mt-1 font-mono text-lg lg:text-xl font-bold text-slate-900 tabular-nums">
                     {formatINR(remainingAnnual, false)}
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs text-slate-500">eNACH Mandate (DEMO)</p>
-                  <p className="mt-1 font-display text-base font-bold text-[#0A2540]">
-                    {activePolicy.mandateStatus}
+                <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs text-slate-500">Annual Renewal</p>
+                  <p className="mt-1 font-mono text-sm lg:text-base font-bold text-[#0A2540]">
+                    {formatDate(activePolicy.annualDueDate)}
                   </p>
                   <p className="mt-0.5 text-[11px] text-slate-500">
-                    Next Debit: {formatDate(activePolicy.nextDebitDate)}
+                    {activePolicy.settlementStatus}
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs text-slate-500">Paid Months</p>
+              {/* Cycle Counts Strip */}
+              <div className="grid grid-cols-3 gap-3 lg:grid-cols-5 lg:gap-4">
+                <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-3.5 lg:p-4">
+                  <p className="text-[11px] lg:text-xs text-slate-500">Paid</p>
                   <p className="mt-1 font-mono text-lg font-bold text-emerald-700 tabular-nums">
-                    {activePolicy.paidMonths}
+                    {activePolicy.paidMonths} mo
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs text-slate-500">Pending Months</p>
+                <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-3.5 lg:p-4">
+                  <p className="text-[11px] lg:text-xs text-slate-500">Pending</p>
                   <p className="mt-1 font-mono text-lg font-bold text-amber-700 tabular-nums">
-                    {activePolicy.pendingMonths}
+                    {activePolicy.pendingMonths} mo
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs text-slate-500">Missed Months</p>
+                <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-3.5 lg:p-4">
+                  <p className="text-[11px] lg:text-xs text-slate-500">Missed</p>
                   <p className="mt-1 font-mono text-lg font-bold text-red-700 tabular-nums">
-                    {activePolicy.missedMonths}
+                    {activePolicy.missedMonths} mo
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="hidden lg:block rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs text-slate-500">Next Debit Date</p>
                   <p className="mt-1 font-mono text-sm font-bold text-slate-900">
                     {formatDate(activePolicy.nextDebitDate)}
                   </p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs text-slate-500">Annual Renewal Date</p>
-                  <p className="mt-1 font-mono text-sm font-bold text-slate-900">
-                    {formatDate(activePolicy.annualDueDate)}
+                <div className="hidden lg:block rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs text-slate-500">Mandate Status</p>
+                  <p className="mt-1 font-display text-sm font-bold text-[#0A2540]">
+                    {activePolicy.mandateStatus}
                   </p>
                 </div>
               </div>
 
-              {/* Accumulation Progress Bar */}
-              <div className="rounded-xl border border-slate-200 bg-white p-6">
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="font-semibold text-slate-800">
-                    Annual Premium Target Progress ({activePolicy.settlementStatus})
-                  </span>
-                  <span className="font-mono font-semibold text-slate-900 tabular-nums">
-                    {formatINR(activePolicy.accumulatedBaseContribution, false)} /{' '}
-                    {formatINR(activePolicy.annualPremium, false)}
-                  </span>
+              {/* Recent Activity Tap List (Mobile GPay / Razorpay feed) */}
+              <div className="rounded-2xl lg:rounded-xl border border-slate-200 bg-white p-5">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-display text-base font-bold text-[#0A2540]">
+                    Recent Contribution Activity
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('ledger')}
+                    className="text-xs font-semibold text-teal-700 hover:underline min-h-[36px]"
+                  >
+                    Full Ledger →
+                  </button>
                 </div>
-                <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    className="h-full rounded-full bg-teal-600 transition-all"
-                    style={{
-                      width: `${Math.min(
-                        100,
-                        Math.round(
-                          (activePolicy.accumulatedBaseContribution / activePolicy.annualPremium) *
-                            100
-                        )
-                      )}%`,
-                    }}
-                  />
+
+                <div className="mt-3 divide-y divide-slate-100">
+                  {myTransactions.slice(0, 4).map((tx) => (
+                    <button
+                      key={tx.id}
+                      type="button"
+                      onClick={() => setReceiptTx(tx)}
+                      className="w-full min-h-[60px] py-3 flex items-center justify-between gap-3 text-left hover:bg-slate-50/70 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                            tx.status === 'Paid' || tx.status === 'Settled'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : tx.status === 'Failed'
+                                ? 'bg-red-50 text-red-700'
+                                : 'bg-amber-50 text-amber-700'
+                          }`}
+                        >
+                          <Receipt className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-slate-900 truncate">
+                            {tx.monthLabel} · {tx.type}
+                          </p>
+                          <p className="text-[11px] text-slate-500 truncate">
+                            {formatDate(tx.date)} · {tx.status}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="font-mono text-xs font-bold text-[#0A2540] tabular-nums">
+                          {formatINR(tx.totalAmount)}
+                        </span>
+                        <ChevronRight className="h-4 w-4 text-slate-400" />
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
             </>
@@ -478,7 +679,7 @@ export const IndividualPortal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddPolicyForm((v) => !v)}
-                  className="rounded-lg bg-[#0A2540] px-4 py-2 text-xs font-semibold text-white hover:bg-[#13365a]"
+                  className="min-h-[44px] rounded-xl bg-[#0A2540] px-4 py-2 text-xs font-semibold text-white hover:bg-[#13365a]"
                 >
                   {showAddPolicyForm ? 'Close Policy Form' : 'Register New Policy'}
                 </button>
@@ -487,7 +688,7 @@ export const IndividualPortal: React.FC = () => {
               {showAddPolicyForm && (
                 <form
                   onSubmit={handleCreatePolicy}
-                  className="rounded-xl border border-slate-200 bg-white p-6 space-y-5"
+                  className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6 space-y-5"
                 >
                   <h3 className="font-display text-lg font-bold text-[#0A2540]">
                     Add Existing Annual Insurance Policy
@@ -502,7 +703,7 @@ export const IndividualPortal: React.FC = () => {
                         required
                         value={insuranceCompany}
                         onChange={(e) => setInsuranceCompany(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                       />
                     </div>
                     <div>
@@ -512,7 +713,7 @@ export const IndividualPortal: React.FC = () => {
                         required
                         value={policyName}
                         onChange={(e) => setPolicyName(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                       />
                     </div>
                     <div>
@@ -522,7 +723,7 @@ export const IndividualPortal: React.FC = () => {
                         required
                         value={policyNumber}
                         onChange={(e) => setPolicyNumber(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm"
+                        className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 font-mono text-sm"
                       />
                     </div>
                     <div>
@@ -532,7 +733,7 @@ export const IndividualPortal: React.FC = () => {
                       <select
                         value={category}
                         onChange={(e) => setCategory(e.target.value as PolicyCategory)}
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                       >
                         <option value="Health">Health</option>
                         <option value="Life">Life</option>
@@ -551,7 +752,7 @@ export const IndividualPortal: React.FC = () => {
                         min={1200}
                         value={annualPremium}
                         onChange={(e) => setAnnualPremium(Math.max(1200, Number(e.target.value)))}
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm"
+                        className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 font-mono text-sm"
                       />
                     </div>
                     <div>
@@ -563,7 +764,7 @@ export const IndividualPortal: React.FC = () => {
                         required
                         value={policyholderName}
                         onChange={(e) => setPolicyholderName(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                       />
                     </div>
                     <div>
@@ -575,7 +776,7 @@ export const IndividualPortal: React.FC = () => {
                         required
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                       />
                     </div>
                     <div>
@@ -587,7 +788,7 @@ export const IndividualPortal: React.FC = () => {
                         required
                         value={annualDueDate}
                         onChange={(e) => setAnnualDueDate(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                       />
                     </div>
                     <div>
@@ -599,7 +800,7 @@ export const IndividualPortal: React.FC = () => {
                         required
                         value={expiryDate}
                         onChange={(e) => setExpiryDate(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                       />
                     </div>
                     <div className="sm:col-span-2 lg:col-span-3">
@@ -611,25 +812,24 @@ export const IndividualPortal: React.FC = () => {
                         placeholder="e.g., Spouse / Parent full name & relationship"
                         value={nomineeDetails}
                         onChange={(e) => setNomineeDetails(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                        className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
                       />
                     </div>
                   </div>
 
-                  {/* Live Calculation Preview */}
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 flex flex-wrap items-center justify-between gap-4 text-xs">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 flex flex-wrap items-center justify-between gap-4 text-xs">
                     <div>
-                      <span className="text-slate-500">Base Monthly:</span>{' '}
+                      <span className="text-slate-500">Base:</span>{' '}
                       <strong className="font-mono text-slate-900">
                         {formatINR(calculateContribution(annualPremium).monthlyBase)}
                       </strong>
                       <span className="mx-2 text-slate-300">|</span>
-                      <span className="text-slate-500">Platform Fee (1.5%):</span>{' '}
+                      <span className="text-slate-500">1.5% Fee:</span>{' '}
                       <strong className="font-mono text-slate-900">
                         {formatINR(calculateContribution(annualPremium).platformFee)}
                       </strong>
                       <span className="mx-2 text-slate-300">|</span>
-                      <span className="text-slate-500">Gateway (2.2%):</span>{' '}
+                      <span className="text-slate-500">2.2% GW:</span>{' '}
                       <strong className="font-mono text-slate-900">
                         {formatINR(calculateContribution(annualPremium).gatewayFee)}
                       </strong>
@@ -639,14 +839,12 @@ export const IndividualPortal: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-3">
-                    <button
-                      type="submit"
-                      className="rounded-lg bg-teal-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-teal-700"
-                    >
-                      Save Policy & Calculate Schedule
-                    </button>
-                  </div>
+                  <button
+                    type="submit"
+                    className="min-h-[48px] w-full sm:w-auto rounded-xl bg-teal-600 px-6 py-2.5 text-xs font-semibold text-white hover:bg-teal-700"
+                  >
+                    Save Policy & Calculate Schedule
+                  </button>
                 </form>
               )}
 
@@ -656,7 +854,7 @@ export const IndividualPortal: React.FC = () => {
                   return (
                     <div
                       key={pol.id}
-                      className={`rounded-xl border bg-white p-6 ${
+                      className={`rounded-2xl border bg-white p-5 ${
                         pol.id === activePolicy?.id ? 'border-[#0A2540]' : 'border-slate-200'
                       }`}
                     >
@@ -676,7 +874,7 @@ export const IndividualPortal: React.FC = () => {
                             setSelectedPolicyId(pol.id);
                             setActiveTab('overview');
                           }}
-                          className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-50"
+                          className="min-h-[40px] rounded-xl border border-slate-300 px-3.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-50"
                         >
                           Select
                         </button>
@@ -732,13 +930,13 @@ export const IndividualPortal: React.FC = () => {
           {/* MANDATE TAB */}
           {activeTab === 'mandate' && activePolicy && (
             <div className="space-y-6">
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
                 <strong>DEMO Simulation Notice:</strong> This eNACH mandate interface demonstrates
                 mandate lifecycle controls using placeholder bank details. No real banking
                 credentials or NPCI mandates are connected.
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-white p-6">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
                 <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5">
                   <div>
                     <p className="text-xs text-slate-500">
@@ -749,27 +947,27 @@ export const IndividualPortal: React.FC = () => {
                     </h2>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-slate-500">Current Mandate Status</p>
+                    <p className="text-xs text-slate-500">Current Status</p>
                     <p className="mt-0.5 font-display text-lg font-bold text-teal-700">
                       {activePolicy.mandateStatus}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3 text-sm">
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3 text-sm">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Monthly Debit Amount</p>
                     <p className="mt-1 font-mono text-lg font-bold text-[#0A2540] tabular-nums">
                       {formatINR(calc.totalMonthly)}
                     </p>
                   </div>
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Next Debit Date</p>
                     <p className="mt-1 font-mono text-lg font-bold text-slate-900">
                       {formatDate(activePolicy.nextDebitDate)}
                     </p>
                   </div>
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs text-slate-500">Bank Account Placeholder</p>
                     <p className="mt-1 text-sm font-semibold text-slate-900">
                       {activePolicy.bankAccountPlaceholder}
@@ -777,8 +975,8 @@ export const IndividualPortal: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-6 flex flex-wrap items-end gap-4 border-t border-slate-100 pt-5">
-                  <div className="flex-1 min-w-[240px]">
+                <div className="mt-6 space-y-4 border-t border-slate-100 pt-5">
+                  <div>
                     <label className="text-xs font-semibold text-slate-700">
                       Simulated Bank Placeholder Label (DEMO)
                     </label>
@@ -786,28 +984,28 @@ export const IndividualPortal: React.FC = () => {
                       type="text"
                       value={bankInput}
                       onChange={(e) => setBankInput(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm"
                     />
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                     <button
                       type="button"
                       onClick={() => updatePolicyMandate(activePolicy.id, 'Active', bankInput)}
-                      className="rounded-lg bg-teal-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-teal-700"
+                      className="min-h-[44px] rounded-xl bg-teal-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-teal-700"
                     >
                       Activate Mandate (DEMO)
                     </button>
                     <button
                       type="button"
                       onClick={() => updatePolicyMandate(activePolicy.id, 'Paused', bankInput)}
-                      className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      className="min-h-[44px] rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                     >
                       Pause Mandate (DEMO)
                     </button>
                     <button
                       type="button"
                       onClick={() => updatePolicyMandate(activePolicy.id, 'Cancelled', bankInput)}
-                      className="rounded-lg border border-red-300 bg-white px-4 py-2.5 text-xs font-semibold text-red-700 hover:bg-red-50"
+                      className="min-h-[44px] rounded-xl border border-red-300 bg-white px-4 py-2.5 text-xs font-semibold text-red-700 hover:bg-red-50"
                     >
                       Cancel Mandate (DEMO)
                     </button>
@@ -815,29 +1013,19 @@ export const IndividualPortal: React.FC = () => {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-white p-6">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
                 <h3 className="font-display text-base font-bold text-[#0A2540]">Mandate History</h3>
-                <div className="mt-4 overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead>
-                      <tr className="border-b border-slate-200 text-slate-500">
-                        <th className="py-2 font-semibold">Date</th>
-                        <th className="py-2 font-semibold">Action</th>
-                        <th className="py-2 font-semibold">Bank Placeholder</th>
-                        <th className="py-2 font-semibold">Notes</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {activePolicy.mandateHistory.map((item) => (
-                        <tr key={item.id}>
-                          <td className="py-2.5 font-mono text-slate-700">{formatDate(item.date)}</td>
-                          <td className="py-2.5 font-semibold text-[#0A2540]">{item.action}</td>
-                          <td className="py-2.5 text-slate-700">{item.bankAccountLabel}</td>
-                          <td className="py-2.5 text-slate-600">{item.note}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="mt-3 divide-y divide-slate-100">
+                  {activePolicy.mandateHistory.map((item) => (
+                    <div key={item.id} className="py-3 text-xs">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-[#0A2540]">{item.action}</span>
+                        <span className="font-mono text-slate-500">{formatDate(item.date)}</span>
+                      </div>
+                      <p className="mt-1 text-slate-700">{item.bankAccountLabel}</p>
+                      <p className="mt-0.5 text-slate-500">{item.note}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -846,7 +1034,7 @@ export const IndividualPortal: React.FC = () => {
           {/* LEDGER TAB */}
           {activeTab === 'ledger' && activePolicy && (
             <div className="space-y-6">
-              <div className="rounded-xl border border-slate-200 bg-white p-6">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
                 <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5">
                   <div>
                     <p className="text-xs font-semibold text-amber-700">
@@ -864,8 +1052,8 @@ export const IndividualPortal: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3 text-xs">
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3 text-xs">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-slate-500">Annual Settlement Status</p>
                     <p className="mt-1 font-display text-base font-bold text-[#0A2540]">
                       {activePolicy.settlementStatus}
@@ -874,7 +1062,7 @@ export const IndividualPortal: React.FC = () => {
                       Due Date: {formatDate(activePolicy.annualDueDate)}
                     </p>
                   </div>
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-slate-500">Last Settlement Acknowledgement</p>
                     <p className="mt-1 font-mono font-semibold text-slate-900">
                       {activePolicy.lastSettlementReceiptCode || 'Pending Cycle Completion'}
@@ -885,17 +1073,17 @@ export const IndividualPortal: React.FC = () => {
                       </p>
                     )}
                   </div>
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 flex flex-col justify-between">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 flex flex-col justify-between">
                     <p className="text-slate-600">
-                      At the annual due date, request settlement so an authorized Admin can disburse
-                      and reset the cycle balance.
+                      At the annual due date, request settlement so Admin can disburse and reset the
+                      cycle balance.
                     </p>
                     {activePolicy.settlementStatus === 'Accumulating' &&
                       activePolicy.accumulatedBaseContribution > 0 && (
                         <button
                           type="button"
                           onClick={() => requestAnnualSettlement(activePolicy.id)}
-                          className="mt-2 rounded-lg bg-[#0A2540] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#13365a]"
+                          className="mt-2 min-h-[40px] rounded-xl bg-[#0A2540] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#13365a]"
                         >
                           Flag Settlement Pending (DEMO)
                         </button>
@@ -904,8 +1092,53 @@ export const IndividualPortal: React.FC = () => {
                 </div>
               </div>
 
-              {/* Ledger Table */}
-              <div className="rounded-xl border border-slate-200 bg-white p-6">
+              {/* Mobile Tap List for Ledger */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 md:hidden">
+                <h3 className="font-display text-base font-bold text-[#0A2540]">
+                  Ledger Transactions (DEMO)
+                </h3>
+                <div className="mt-3 divide-y divide-slate-100">
+                  {myTransactions.map((tx) => (
+                    <button
+                      key={tx.id}
+                      type="button"
+                      onClick={() => setReceiptTx(tx)}
+                      className="w-full min-h-[64px] py-3 flex items-center justify-between gap-3 text-left"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                            tx.status === 'Paid' || tx.status === 'Settled'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : tx.status === 'Failed'
+                                ? 'bg-red-50 text-red-700'
+                                : 'bg-amber-50 text-amber-700'
+                          }`}
+                        >
+                          <Receipt className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-slate-900 truncate">
+                            {tx.monthLabel} · {tx.status}
+                          </p>
+                          <p className="text-[11px] text-slate-500 truncate">
+                            Base {formatINR(tx.baseAmount)} · Fee {formatINR(tx.platformFee)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-mono text-xs font-bold text-[#0A2540] tabular-nums">
+                          {formatINR(tx.totalAmount)}
+                        </p>
+                        <p className="font-mono text-[10px] text-teal-700">View Receipt</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Desktop Ledger Table */}
+              <div className="hidden md:block rounded-xl border border-slate-200 bg-white p-6">
                 <h3 className="font-display text-base font-bold text-[#0A2540]">
                   Contribution & Settlement Ledger History (DEMO)
                 </h3>
@@ -987,7 +1220,7 @@ export const IndividualPortal: React.FC = () => {
           {/* MISSED PAYMENT & SUPPORT TAB */}
           {activeTab === 'missed-reason' && activePolicy && (
             <div className="space-y-6">
-              <div className="rounded-xl border border-slate-200 bg-white p-6">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
                 <h2 className="font-display text-xl font-bold text-[#0A2540]">
                   Missed Payment Escalation & Reason Submission
                 </h2>
@@ -1001,7 +1234,7 @@ export const IndividualPortal: React.FC = () => {
 
                 <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3 text-xs">
                   <div
-                    className={`rounded-lg border p-3.5 ${
+                    className={`rounded-xl border p-3.5 ${
                       activePolicy.consecutiveMissedMonths === 1
                         ? 'border-sky-400 bg-sky-50'
                         : 'border-slate-200 bg-slate-50'
@@ -1013,7 +1246,7 @@ export const IndividualPortal: React.FC = () => {
                     </p>
                   </div>
                   <div
-                    className={`rounded-lg border p-3.5 ${
+                    className={`rounded-xl border p-3.5 ${
                       activePolicy.consecutiveMissedMonths === 2
                         ? 'border-amber-400 bg-amber-50'
                         : 'border-slate-200 bg-slate-50'
@@ -1025,7 +1258,7 @@ export const IndividualPortal: React.FC = () => {
                     </p>
                   </div>
                   <div
-                    className={`rounded-lg border p-3.5 ${
+                    className={`rounded-xl border p-3.5 ${
                       activePolicy.consecutiveMissedMonths >= 3
                         ? 'border-red-400 bg-red-50'
                         : 'border-slate-200 bg-slate-50'
@@ -1038,7 +1271,7 @@ export const IndividualPortal: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-700">
+                <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-700">
                   <strong>Policyholder Protection Notice:</strong> Policy cancellation, refunds, and
                   any applicable charges are subject to the agreed customer terms and the
                   insurer&apos;s policy conditions. AdharaFinx never automatically confiscates
@@ -1046,7 +1279,7 @@ export const IndividualPortal: React.FC = () => {
                 </div>
 
                 {reasonSubmittedBanner && (
-                  <div className="mt-4 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-800">
+                  <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-800">
                     <CheckCircle2 className="h-4 w-4" />
                     Your missed payment reason has been logged and shared with Operations & your
                     assigned advisor.
@@ -1062,7 +1295,7 @@ export const IndividualPortal: React.FC = () => {
                       {MISSED_REASONS.map((reason) => (
                         <label
                           key={reason}
-                          className={`flex items-center gap-2.5 rounded-lg border px-3.5 py-2.5 text-xs font-medium cursor-pointer ${
+                          className={`flex min-h-[44px] items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-xs font-medium cursor-pointer ${
                             selectedReason === reason
                               ? 'border-[#0A2540] bg-[#0A2540] text-white'
                               : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
@@ -1091,13 +1324,13 @@ export const IndividualPortal: React.FC = () => {
                       placeholder="Explain your situation or request a temporary mandate pause / refund review..."
                       value={reasonMessage}
                       onChange={(e) => setReasonMessage(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3.5 py-2 text-sm focus:border-teal-600 focus:outline-none"
+                      className="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm focus:border-teal-600 focus:outline-none"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="rounded-lg bg-[#0A2540] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#13365a]"
+                    className="min-h-[48px] w-full sm:w-auto rounded-xl bg-[#0A2540] px-6 py-2.5 text-xs font-semibold text-white hover:bg-[#13365a]"
                   >
                     Submit Reason to AdharaFinx Support
                   </button>
@@ -1105,7 +1338,7 @@ export const IndividualPortal: React.FC = () => {
               </div>
 
               {mySupportRequests.length > 0 && (
-                <div className="rounded-xl border border-slate-200 bg-white p-6">
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
                   <h3 className="font-display text-base font-bold text-[#0A2540]">
                     Your Submitted Notifications & Support Cases
                   </h3>
@@ -1113,7 +1346,7 @@ export const IndividualPortal: React.FC = () => {
                     {mySupportRequests.map((req) => (
                       <div
                         key={req.id}
-                        className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs"
+                        className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs"
                       >
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="font-semibold text-[#0A2540]">
@@ -1136,6 +1369,90 @@ export const IndividualPortal: React.FC = () => {
           )}
         </main>
       </div>
+
+      {/* Mobile Fixed Bottom Navigation Bar (GPay / Razorpay style) */}
+      <nav
+        aria-label="Mobile Navigation"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 h-15 pb-safe border-t border-slate-200 bg-white/95 backdrop-blur-md grid grid-cols-5 items-center"
+      >
+        {[
+          { id: 'overview' as const, label: 'Home', icon: Home },
+          { id: 'ledger' as const, label: 'Ledger', icon: Wallet },
+          { id: 'calendar' as const, label: 'Calendar', icon: CalendarIcon },
+          { id: 'mandate' as const, label: 'Mandate', icon: CreditCard },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const active = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex min-h-[44px] flex-col items-center justify-center ${
+                active ? 'text-[#0A2540]' : 'text-slate-500'
+              }`}
+            >
+              <Icon className={`h-5 w-5 ${active ? 'text-teal-600' : ''}`} />
+              <span className="mt-0.5 text-[10px] font-semibold tracking-tight">{tab.label}</span>
+            </button>
+          );
+        })}
+        <button
+          type="button"
+          onClick={() => setMobileMoreOpen(true)}
+          className={`flex min-h-[44px] flex-col items-center justify-center ${
+            ['policies', 'calculator', 'missed-reason'].includes(activeTab)
+              ? 'text-[#0A2540]'
+              : 'text-slate-500'
+          }`}
+        >
+          <MoreHorizontal className="h-5 w-5" />
+          <span className="mt-0.5 text-[10px] font-semibold tracking-tight">More</span>
+        </button>
+      </nav>
+
+      {/* Mobile "More" Bottom Sheet */}
+      <MobileSheet
+        open={mobileMoreOpen}
+        title={currentUser?.name ?? 'Account'}
+        subtitle={currentUser?.email}
+        onClose={() => setMobileMoreOpen(false)}
+      >
+        <div className="space-y-2">
+          {[
+            { id: 'policies' as const, label: 'My Registered Policies', icon: FileText },
+            { id: 'calculator' as const, label: 'Monthly Contribution Calculator', icon: Calculator },
+            { id: 'missed-reason' as const, label: 'Missed Payment & Support', icon: ShieldAlert },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setMobileMoreOpen(false);
+                }}
+                className="flex min-h-[52px] w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 text-left text-sm font-semibold text-[#0A2540]"
+              >
+                <span className="flex items-center gap-3">
+                  <Icon className="h-5 w-5 text-teal-700" />
+                  {item.label}
+                </span>
+                <ChevronRight className="h-4 w-4 text-slate-400" />
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={logout}
+            className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 text-sm font-semibold text-red-700"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </button>
+        </div>
+      </MobileSheet>
 
       <ReceiptModal
         transaction={receiptTx}
